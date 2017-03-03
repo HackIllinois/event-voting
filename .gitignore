@@ -1,0 +1,5 @@
+firebase_credentials.json
+.DS_Store
+venv/
+config.py
+__pycache__/
