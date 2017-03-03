@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from config import config
+from twilio_decorator import validate_twilio_request
 import twilio.twiml
 import pyrebase
 
@@ -9,18 +10,15 @@ firebase = pyrebase.initialize_app(config)
 ref = firebase.database()
 
 LETTERS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T')
-
-
 MENTOR_VOTES = 3
 FACULTY_VOTES = 2
-
 MENTOR_MULTIPLIER = 1.5
 FACULTY_MULTIPLIER = 2
-
 MAX_TABLE_NUMBER = 200
 
 
-@app.route('/attendees/3361555f-0ee8-4fef-943a-c5ca80341de3', methods=["POST"])
+@app.route('/attendees/', methods=["POST"])
+@validate_twilio_request
 def attendee():
 	from_number = request.values.get('From', None)
 	project_id = request.values.get('Body', None)
@@ -39,7 +37,8 @@ def attendee():
 
 	return str(resp)
 
-@app.route('/faculty/3361555f-0ee8-4fef-943a-c5ca80341de3', methods=["POST"])
+@app.route('/faculty/', methods=["POST"])
+@validate_twilio_request
 def faculty():
 	from_number = request.values.get('From', None)
 	project_id = request.values.get('Body', None)
@@ -59,7 +58,8 @@ def faculty():
 	return str(resp)
 
 
-@app.route('/mentor/3361555f-0ee8-4fef-943a-c5ca80341de3', methods=["POST"])
+@app.route('/mentor/', methods=["POST"])
+@validate_twilio_request
 def mentor():
 	from_number = request.values.get('From', None)
 	project_id = request.values.get('Body', None)
