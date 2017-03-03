@@ -8,7 +8,7 @@ app = Flask(__name__)
 firebase = pyrebase.initialize_app(config)
 ref = firebase.database()
 
-letters = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't')
+LETTERS = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T')
 
 
 MENTOR_VOTES = 3
@@ -26,13 +26,10 @@ def attendee():
 	project_id = request.values.get('Body', None)
 
 	resp = twilio.twiml.Response()
-	resp.message("Voting is now over. Thanks for attending!")
-	return str(resp)
-
 	valid_vote = validate_vote(project_id)
 
 	if not valid_vote:
-		resp.message("Sorry, the project id is not valid")
+		resp.message("Sorry, the table number is not valid")
 	else:
 		voted = cast_attendee_vote(project_id, from_number)
 		if not voted:
@@ -48,13 +45,10 @@ def faculty():
 	project_id = request.values.get('Body', None)
 
 	resp = twilio.twiml.Response()
-	resp.message("Voting is now over. Thanks for attending!")
-	return str(resp)
-
 	valid_vote = validate_vote(project_id)
 
 	if not valid_vote:
-		resp.message("Sorry, the project id is not valid")
+		resp.message("Sorry, the table number is not valid")
 	else:
 		voted = cast_faculty_vote(project_id, from_number)
 		if not voted:
@@ -71,9 +65,6 @@ def mentor():
 	project_id = request.values.get('Body', None)
 
 	resp = twilio.twiml.Response()
-	resp.message("Voting is now over. Thanks for attending!")
-	return str(resp)
-
 	valid_vote = validate_vote(project_id)
 
 	if not valid_vote:
@@ -105,13 +96,14 @@ def ranking2():
 
 
 
-#Check if vote is an integer
+#Check if vote is a letter-integer combo
 def validate_vote(message_body):
 	try:
-		convert = int(message_body)
+		column = message_body[0]
+		number = int(message_body[1])
+		return column.upper() in LETTERS
 	except Exception as e:
 		return False
-	return convert <= MAX_TABLE_NUMBER
 
 
 ###############################################
