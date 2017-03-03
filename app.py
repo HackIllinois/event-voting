@@ -98,6 +98,8 @@ def ranking2():
 
 #Check if vote is a letter-integer combo
 def validate_vote(message_body):
+	if len(message_body) > 2:
+		return False
 	try:
 		column = message_body[0]
 		number = int(message_body[1])
@@ -109,7 +111,6 @@ def validate_vote(message_body):
 ###############################################
 #Attendees
 
-#Check if user has already voted
 def cast_attendee_vote(project_id, phone_number):
 	#Check if user has already voted
 	try:
@@ -118,23 +119,21 @@ def cast_attendee_vote(project_id, phone_number):
 	except Exception as e:
 		pass		
 
-	#Update attendee vote counts
+	#Update vote counts
 	try:
 		project = ref.child("projects").child(project_id).get()
-		vote_count = project.val()["attendee_votes"]
+		attendee_votes = project.val()["attendee_votes"] + 1
+		total_score = project.val()["total_score"] + 1
+		mentor_votes = project.val()["mentor_votes"]
+		faculty_votes = project.val()["faculty_votes"]
 	except Exception as e:
-		project = {}
-		vote_count = 0
+		attendee_votes = 1 
+		total_score = 1
+		mentor_votes = 0
+		faculty_votes = 0
 
-	#Get the score
-	try:
-		total_score = project.val()["total_score"]
-	except Exception as e:
-		total_score = 0
-	
-	vote_count += 1
-	total_score += 1
-	ref.child("projects").child(project_id).update({"attendee_votes": vote_count, "total_score": total_score})
+	new_project = {"attendee_votes": attendee_votes, "total_score": total_score, "mentor_votes": mentor_votes, "faculty_votes": faculty_votes}
+	ref.child("projects").child(project_id).update(new_project)
 	
 	#Log attendee vote
 	ref.child("attendees").push({"number": phone_number})
@@ -157,23 +156,21 @@ def cast_faculty_vote(project_id, phone_number):
 	except Exception as e:
 		cur_faculty_votes = 0
 
-	#Get the vote count
+	#Update vote counts
 	try:
 		project = ref.child("projects").child(project_id).get()
-		vote_count = project.val()["faculty_votes"]
+		attendee_votes = project.val()["attendee_votes"]
+		total_score = project.val()["total_score"] + FACULTY_MULTIPLIER
+		mentor_votes = project.val()["mentor_votes"]
+		faculty_votes = project.val()["faculty_votes"] + 1
 	except Exception as e:
-		vote_count = 0
-		project = {}
+		attendee_votes = 0 
+		total_score = FACULTY_MULTIPLIER
+		mentor_votes = 0
+		faculty_votes = 1
 
-	#Get the score 
-	try:
-		total_score = project.val()["total_score"]
-	except Exception as e:
-		total_score = 0 
-
-	vote_count += 1
-	total_score += FACULTY_MULTIPLIER
-	ref.child("projects").child(project_id).update({"faculty_votes": vote_count, "total_score": total_score})
+	new_project = {"attendee_votes": attendee_votes, "total_score": total_score, "mentor_votes": mentor_votes, "faculty_votes": faculty_votes}
+	ref.child("projects").child(project_id).update(new_project)
 
 	#Log the faculty member
 	ref.child("faculty").child(phone_number).update({"votes_made": cur_faculty_votes+1})
@@ -191,27 +188,25 @@ def cast_mentor_vote(project_id, phone_number):
 		cur_mentor_votes = cur_mentor["votes_made"]
 		if cur_mentor_votes >= MENTOR_VOTES:
 			return False
-	#Faculty doesn't exist currently so create a new one
+	#Mentor doesn't exist currently so create a new one
 	except Exception as e:
 		cur_mentor_votes = 0
 
-	#Cast the actual vote
+	#Update vote counts
 	try:
 		project = ref.child("projects").child(project_id).get()
-		vote_count = project.val()["mentor_votes"]
+		attendee_votes = project.val()["attendee_votes"]
+		total_score = project.val()["total_score"] + MENTOR_MULTIPLIER
+		mentor_votes = project.val()["mentor_votes"] + 1
+		faculty_votes = project.val()["faculty_votes"]
 	except Exception as e:
-		vote_count = 0
-		project = {}
+		attendee_votes = 0 
+		total_score = MENTOR_MULTIPLIER
+		mentor_votes = 1
+		faculty_votes = 0
 
-	#Get the score
-	try:
-		total_score = project.val()["total_score"]
-	except Exception as e:
-		total_score = 0
-
-	vote_count += 1
-	total_score += MENTOR_MULTIPLIER 
-	ref.child("projects").child(project_id).update({"mentor_votes": vote_count, "total_score": total_score})
+	new_project = {"attendee_votes": attendee_votes, "total_score": total_score, "mentor_votes": mentor_votes, "faculty_votes": faculty_votes}
+	ref.child("projects").child(project_id).update(new_project)
 
 	#Log the faculty member
 	ref.child("mentors").child(phone_number).update({"votes_made": cur_mentor_votes+1})
